@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI聊天助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div id="app">
+        <h2>AI聊天助手</h2>
+        <div id="chat-container"></div>
+        <input type="text" id="user-input" placeholder="输入您的问题...">
+        <button onclick="sendMessage()">发送</button>
+    </div>
+
+    <script>
+        // 替换为您的花生壳外网地址
+        const API_BASE = 'https://es1045327pj3.vicp.fun';
+        
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (!userInput) return;
+            
+            addMessage('user', userInput);
+            document.getElementById('user-input').value = '';
+            
+            try {
+                const response = await fetch(API_BASE + '/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: '',
+                        messages: [
+                            { role: 'user', content: userInput }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    })
+                });
+                
+                const data = await response.json();
+                addMessage('assistant', data.choices[0].message.content);
+            } catch (error) {
+                addMessage('system', '请求失败：' + error.message);
+            }
+        }
+        
+        function addMessage(role, content) {
+            const container = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + role;
+            messageDiv.innerHTML = `<strong>${role}:</strong> ${content}`;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>
