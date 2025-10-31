@@ -1,76 +1,185 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI智能聊天助手</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .chat-container { border: 1px solid #ddd; height: 400px; overflow-y: auto; padding: 10px; margin-bottom: 10px; }
-        .user { background: #e3f2fd; padding: 8px; margin: 5px; border-radius: 10px; }
-        .assistant { background: #f5f5f5; padding: 8px; margin: 5px; border-radius: 10px; }
-        .input-area { display: flex; gap: 10px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤖 AI智能聊天助手</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 10px;
+    }
+
+    .chat-container {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      overflow-y: auto;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
+    }
+
+    .message {
+      margin: 8px 0;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .user {
+      justify-content: flex-end;
+    }
+
+    .user .bubble {
+      background: #007bff;
+      color: #fff;
+      border-radius: 12px 12px 0 12px;
+      padding: 8px 12px;
+      max-width: 75%;
+      word-wrap: break-word;
+    }
+
+    .assistant .bubble {
+      background: #f5f5f5;
+      color: #333;
+      border-radius: 12px 12px 12px 0;
+      padding: 8px 12px;
+      max-width: 75%;
+      word-wrap: break-word;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #007bff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+      margin-left: 5px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-    <h1>🤖 AI智能聊天助手</h1>
-    <div id="chat-container" class="chat-container"></div>
-    <div class="input-area">
-        <input type="text" id="user-input" placeholder="输入您的问题..." onkeypress="handleKeyPress(event)">
-        <button onclick="sendMessage()">发送</button>
-    </div>
+  <h1>🤖 AI智能聊天助手</h1>
+  <div id="chat-container" class="chat-container"></div>
 
-    <script>
-        // 替换为您的花生壳外网地址
-        const API_BASE = 'https://es1045327pj3.vicp.fun';
-        
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
-        
-        async function sendMessage() {
-            const userInput = document.getElementById('user-input');
-            const message = userInput.value.trim();
-            if (!message) return;
-            
-            addMessage('user', message);
-            userInput.value = '';
-            userInput.disabled = true;
-            
-            try {
-                const response = await fetch(API_BASE + '/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: '',
-                        messages: [{ role: 'user', content: message }],
-                        temperature: 0.7,
-                        max_tokens: 1000
-                    })
-                });
-                
-                const data = await response.json();
-                addMessage('assistant', data.choices[0].message.content);
-            } catch (error) {
-                addMessage('system', '请求失败：' + error.message);
-            } finally {
-                userInput.disabled = false;
-                userInput.focus();
-            }
-        }
-        
-        function addMessage(role, content) {
-            const container = document.getElementById('chat-container');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = role;
-            messageDiv.innerHTML = `<strong>${role === 'user' ? '您' : 'AI'}:</strong> ${content}`;
-            container.appendChild(messageDiv);
-            container.scrollTop = container.scrollHeight;
-        }
-    </script>
+  <div class="input-area">
+    <input type="text" id="user-input" placeholder="输入您的问题..." onkeypress="handleKeyPress(event)">
+    <button id="send-btn" onclick="sendMessage()">发送</button>
+  </div>
+
+  <script>
+    // 🚀 你的 API 外网地址（花生壳内网穿透地址）
+    // ⚠️ 请改成你自己的，比如：
+    // const API_BASE = 'https://es1045327pj3.vicp.fun';
+    const API_BASE = 'http://your-domain.xicp.net:port';
+
+    async function sendMessage() {
+      const userInput = document.getElementById('user-input');
+      const sendBtn = document.getElementById('send-btn');
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      addMessage('user', message);
+      userInput.value = '';
+      userInput.disabled = true;
+      sendBtn.disabled = true;
+      addMessage('assistant', '<span class="loading"></span> 正在思考...');
+
+      try {
+        const response = await fetch(API_BASE + '/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: '', // 这里填你的模型名称，例如 'gpt-4o-mini' 或 'cherry'
+            messages: [{ role: 'user', content: message }],
+            temperature: 0.7,
+            max_tokens: 1000
+          })
+        });
+
+        if (!response.ok) throw new Error('网络错误: ' + response.status);
+
+        const data = await response.json();
+        const aiContent = data?.choices?.[0]?.message?.content || '（无回复内容）';
+        replaceLastAssistant(aiContent);
+      } catch (error) {
+        replaceLastAssistant('❌ 请求失败：' + error.message);
+      } finally {
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+      }
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') sendMessage();
+    }
+
+    function addMessage(role, content) {
+      const container = document.getElementById('chat-container');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${role}`;
+      msgDiv.innerHTML = `<div class="bubble">${content}</div>`;
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // 替换最后一个 AI 消息（用来更新“正在思考...”）
+    function replaceLastAssistant(newContent) {
+      const container = document.getElementById('chat-container');
+      const last = [...container.querySelectorAll('.assistant .bubble')].pop();
+      if (last) {
+        last.innerHTML = newContent;
+      }
+      container.scrollTop = container.scrollHeight;
+    }
+  </script>
 </body>
 </html>
